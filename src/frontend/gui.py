@@ -40,6 +40,7 @@ class AESApp:
 
         self.current_state_history = []
         self.current_step_index = 0
+        self.is_decrypting = False
 
         self.setup_styles()
         self.setup_ui()
@@ -212,6 +213,7 @@ class AESApp:
 
             self.current_state_history = first_block_trace
             self.current_step_index = 0
+            self.is_decrypting = False
             self.show_step()
             self.step_label.config(foreground=self.colors["accent"])
 
@@ -236,9 +238,15 @@ class AESApp:
                 return
 
             decrypted_padded = b""
+            first_block_trace = None
+            
             for i in range(0, len(ciphertext), 16):
                 block = ciphertext[i:i+16]
-                decrypted_block = self.backend.decrypt_block(block, key_bytes)
+                if i == 0:
+                    decrypted_block, trace = self.backend.decrypt_block(block, key_bytes, trace=True)
+                    first_block_trace = trace
+                else:
+                    decrypted_block = self.backend.decrypt_block(block, key_bytes, trace=False)
                 decrypted_padded += decrypted_block
 
             try:
@@ -252,7 +260,11 @@ class AESApp:
             self.output_text.insert("1.0", plaintext)
             self.output_text.config(state="disabled")
             
-            self.step_label.config(text="Descifrado Completo", foreground=self.colors["success"])
+            self.current_state_history = first_block_trace
+            self.current_step_index = 0
+            self.is_decrypting = True
+            self.show_step()
+            self.step_label.config(foreground=self.colors["success"])
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
@@ -265,14 +277,27 @@ class AESApp:
         self.update_matrix(state)
         
         round_name = "Desconocido"
-        if self.current_step_index == 0:
-            round_name = "Estado Inicial (Texto Plano)"
-        elif self.current_step_index == 1:
-            round_name = "Ronda 0: AddRoundKey"
-        elif 2 <= self.current_step_index <= 10:
-            round_name = f"Ronda {self.current_step_index - 1}: Ciclo Completo"
-        elif self.current_step_index == 11:
-            round_name = "Ronda Final (Sin MixColumns)"
+        
+        if not self.is_decrypting:
+            # Etiquetas para Cifrado
+            if self.current_step_index == 0:
+                round_name = "Estado Inicial (Texto Plano)"
+            elif self.current_step_index == 1:
+                round_name = "Ronda 0: AddRoundKey"
+            elif 2 <= self.current_step_index <= 10:
+                round_name = f"Ronda {self.current_step_index - 1}: Ciclo Completo"
+            elif self.current_step_index == 11:
+                round_name = "Ronda Final (Sin MixColumns)"
+        else:
+            # Etiquetas para Descifrado
+            if self.current_step_index == 0:
+                round_name = "Estado Inicial (Cifrado)"
+            elif self.current_step_index == 1:
+                round_name = "Ronda Inv Inicial (AddKey10+InvShift+InvSub)"
+            elif 2 <= self.current_step_index <= 10:
+                round_name = f"Ronda Inv {11 - self.current_step_index}: Ciclo Completo"
+            elif self.current_step_index == 11:
+                round_name = "Ronda Inv Final (AddKey0 -> Texto Plano)"
             
         self.step_label.config(text=f"Paso {self.current_step_index}/11: {round_name}")
 

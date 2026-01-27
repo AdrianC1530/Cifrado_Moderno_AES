@@ -213,12 +213,19 @@ class AESBackend:
             return result, state_history
         return result
 
-    def decrypt_block(self, ciphertext_block, key):
-        """Descifra un solo bloque de 16 bytes."""
+    def decrypt_block(self, ciphertext_block, key, trace=False):
+        """
+        Descifra un solo bloque de 16 bytes.
+        trace: si es True, devuelve (texto plano, historial_de_estados)
+        """
+        state_history = []
         state = [[0] * 4 for _ in range(4)]
         for r in range(4):
             for c in range(4):
                 state[c][r] = ciphertext_block[r + 4 * c]
+
+        if trace:
+            state_history.append([row[:] for row in state]) # Estado Inicial (Cifrado)
 
         round_keys = self.key_expansion(key)
 
@@ -226,6 +233,9 @@ class AESBackend:
         self.add_round_key_step(state, round_keys[10])
         self.inv_shift_rows(state)
         self.inv_sub_bytes(state)
+        
+        if trace:
+            state_history.append([row[:] for row in state])
 
         # Rondas 9 a 1
         for round_num in range(9, 0, -1):
@@ -233,15 +243,24 @@ class AESBackend:
             self.inv_mix_columns(state)
             self.inv_shift_rows(state)
             self.inv_sub_bytes(state)
+            if trace:
+                state_history.append([row[:] for row in state])
 
         # Ronda Final (Inverso de la Ronda Inicial de cifrado)
         self.add_round_key_step(state, round_keys[0])
+        
+        if trace:
+            state_history.append([row[:] for row in state])
 
         output = [0] * 16
         for r in range(4):
             for c in range(4):
                 output[r + 4 * c] = state[c][r]
-        return bytes(output)
+        
+        result = bytes(output)
+        if trace:
+            return result, state_history
+        return result
 
     def add_round_key_step(self, state, round_key):
         """Paso auxiliar para aplicar AddRoundKey con una clave de ronda específica."""
