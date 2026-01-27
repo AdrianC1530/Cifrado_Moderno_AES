@@ -1,6 +1,6 @@
 class AESBackend:
     def __init__(self):
-        # S-Box standard for AES
+        # S-Box estándar para AES
         self.s_box = (
             0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
             0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -20,7 +20,7 @@ class AESBackend:
             0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16,
         )
 
-        # Inverse S-Box
+        # S-Box Inversa
         self.inv_s_box = (
             0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB,
             0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87, 0x34, 0x8E, 0x43, 0x44, 0xC4, 0xDE, 0xE9, 0xCB,
@@ -40,7 +40,7 @@ class AESBackend:
             0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D,
         )
 
-        # Rcon (Round Constants)
+        # Rcon (Constantes de Ronda)
         self.r_con = (
             0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40,
             0x80, 0x1B, 0x36, 0x6C, 0xD8, 0xAB, 0x4D, 0x9A,
@@ -49,31 +49,35 @@ class AESBackend:
         )
 
     def sub_bytes(self, state):
+        """Sustitución no lineal de bytes usando la S-Box."""
         for i in range(4):
             for j in range(4):
                 state[i][j] = self.s_box[state[i][j]]
         return state
 
     def inv_sub_bytes(self, state):
+        """Sustitución inversa de bytes."""
         for i in range(4):
             for j in range(4):
                 state[i][j] = self.inv_s_box[state[i][j]]
         return state
 
     def shift_rows(self, state):
+        """Desplaza las filas de la matriz de estado a la izquierda."""
         state[0][1], state[1][1], state[2][1], state[3][1] = state[1][1], state[2][1], state[3][1], state[0][1]
         state[0][2], state[1][2], state[2][2], state[3][2] = state[2][2], state[3][2], state[0][2], state[1][2]
         state[0][3], state[1][3], state[2][3], state[3][3] = state[3][3], state[0][3], state[1][3], state[2][3]
         return state
 
     def inv_shift_rows(self, state):
+        """Desplaza las filas de la matriz de estado a la derecha (Inverso)."""
         state[0][1], state[1][1], state[2][1], state[3][1] = state[3][1], state[0][1], state[1][1], state[2][1]
         state[0][2], state[1][2], state[2][2], state[3][2] = state[2][2], state[3][2], state[0][2], state[1][2]
         state[0][3], state[1][3], state[2][3], state[3][3] = state[1][3], state[2][3], state[3][3], state[0][3]
         return state
 
     def gmul(self, a, b):
-        """Galois Field (2^8) Multiplication of two bytes"""
+        """Multiplicación en Campos de Galois (2^8) de dos bytes."""
         p = 0
         for _ in range(8):
             if b & 1:
@@ -81,11 +85,12 @@ class AESBackend:
             hi_bit_set = a & 0x80
             a <<= 1
             if hi_bit_set:
-                a ^= 0x1B  # x^8 + x^4 + x^3 + x + 1
+                a ^= 0x1B  # Polinomio irreducible: x^8 + x^4 + x^3 + x + 1
             b >>= 1
         return p & 0xFF
 
     def mix_columns(self, state):
+        """Mezcla las columnas de la matriz de estado."""
         for i in range(4):
             s0 = state[i][0]
             s1 = state[i][1]
@@ -99,6 +104,7 @@ class AESBackend:
         return state
 
     def inv_mix_columns(self, state):
+        """Operación inversa de mezcla de columnas."""
         for i in range(4):
             s0 = state[i][0]
             s1 = state[i][1]
@@ -112,46 +118,40 @@ class AESBackend:
         return state
 
     def add_round_key(self, state, key_schedule, round_num):
+        """Añade la clave de ronda al estado mediante XOR."""
         for i in range(4):
             for j in range(4):
                 state[i][j] ^= key_schedule[round_num * 4 + i][j]
         return state
 
     def key_expansion(self, key):
-        """Expands the 128-bit key into a key schedule."""
+        """Expande la clave de 128 bits en un programa de claves (Key Schedule)."""
         key_symbols = [c for c in key]
         
-        # Initialize key schedule with the original key
-        # We need a 4x4 matrix for each round key. 
-        # But standard description often uses a linear array of words (4 bytes).
-        # Here we will produce a list of 4x4 matrices (one for each round + initial).
-        # AES-128 has 10 rounds + 1 initial = 11 round keys.
-        # Each round key is 16 bytes (4 words).
+        # Inicializar el programa de claves con la clave original
+        # Necesitamos una matriz de 4x4 para cada clave de ronda.
+        # AES-128 tiene 10 rondas + 1 inicial = 11 claves de ronda.
         
-        # Convert key to words (columns)
+        # Convertir clave a palabras (columnas)
         w = []
         for i in range(4):
             w.append([key_symbols[4*i], key_symbols[4*i+1], key_symbols[4*i+2], key_symbols[4*i+3]])
             
-        # Generate the rest
+        # Generar el resto
         for i in range(4, 4 * (10 + 1)):
             temp = w[i-1][:]
             if i % 4 == 0:
-                # RotWord
+                # RotWord (Rotar palabra)
                 temp = temp[1:] + temp[:1]
-                # SubWord
+                # SubWord (Sustituir palabra)
                 temp = [self.s_box[b] for b in temp]
-                # Rcon
+                # Rcon (XOR con constante de ronda)
                 temp[0] ^= self.r_con[i // 4]
             
             new_word = [w[i-4][j] ^ temp[j] for j in range(4)]
             w.append(new_word)
             
-        # Format into round keys (matrices)
-        # The state is usually accessed as state[col][row] or state[row][col] depending on convention.
-        # FIPS 197 uses column-major order for the state array.
-        # Let's stick to a convention: state[col][row].
-        
+        # Formatear en claves de ronda (matrices)
         round_keys = []
         for r in range(11):
             round_key = []
@@ -159,38 +159,34 @@ class AESBackend:
                 round_key.append(w[r*4 + c])
             round_keys.append(round_key)
             
-        # Flatten for easier usage in add_round_key if needed, but list of matrices is good.
-        # Actually, my add_round_key expects `key_schedule` to be accessible.
-        # Let's adjust add_round_key to take a single round key matrix.
-        
         return round_keys
 
     def encrypt_block(self, plaintext_block, key, trace=False):
         """
-        Encrypts a single 16-byte block.
-        plaintext_block: list/bytes of 16 integers
-        key: list/bytes of 16 integers
-        trace: if True, returns (ciphertext, state_history)
+        Cifra un solo bloque de 16 bytes.
+        plaintext_block: lista/bytes de 16 enteros
+        key: lista/bytes de 16 enteros
+        trace: si es True, devuelve (texto cifrado, historial_de_estados)
         """
         state_history = []
         
         state = [[0] * 4 for _ in range(4)]
-        # Populate state (column-major order)
+        # Llenar estado (orden por columnas)
         for r in range(4):
             for c in range(4):
                 state[c][r] = plaintext_block[r + 4 * c]
 
         if trace:
-            state_history.append([row[:] for row in state]) # Initial state
+            state_history.append([row[:] for row in state]) # Estado Inicial
 
         round_keys = self.key_expansion(key)
 
-        # Initial Round
+        # Ronda Inicial
         self.add_round_key_step(state, round_keys[0])
         if trace:
-            state_history.append([row[:] for row in state]) # After AddRoundKey 0
+            state_history.append([row[:] for row in state]) # Después de AddRoundKey 0
 
-        # Rounds 1 to 9
+        # Rondas 1 a 9
         for round_num in range(1, 10):
             self.sub_bytes(state)
             self.shift_rows(state)
@@ -199,14 +195,14 @@ class AESBackend:
             if trace:
                 state_history.append([row[:] for row in state])
 
-        # Final Round (No MixColumns)
+        # Ronda Final (Sin MixColumns)
         self.sub_bytes(state)
         self.shift_rows(state)
         self.add_round_key_step(state, round_keys[10])
         if trace:
             state_history.append([row[:] for row in state])
 
-        # Output
+        # Salida
         output = [0] * 16
         for r in range(4):
             for c in range(4):
@@ -218,6 +214,7 @@ class AESBackend:
         return result
 
     def decrypt_block(self, ciphertext_block, key):
+        """Descifra un solo bloque de 16 bytes."""
         state = [[0] * 4 for _ in range(4)]
         for r in range(4):
             for c in range(4):
@@ -225,19 +222,19 @@ class AESBackend:
 
         round_keys = self.key_expansion(key)
 
-        # Initial Round (Reverse of Final Round encryption)
+        # Ronda Inicial (Inverso de la Ronda Final de cifrado)
         self.add_round_key_step(state, round_keys[10])
         self.inv_shift_rows(state)
         self.inv_sub_bytes(state)
 
-        # Rounds 9 to 1
+        # Rondas 9 a 1
         for round_num in range(9, 0, -1):
             self.add_round_key_step(state, round_keys[round_num])
             self.inv_mix_columns(state)
             self.inv_shift_rows(state)
             self.inv_sub_bytes(state)
 
-        # Final Round (Reverse of Initial Round encryption)
+        # Ronda Final (Inverso de la Ronda Inicial de cifrado)
         self.add_round_key_step(state, round_keys[0])
 
         output = [0] * 16
@@ -247,6 +244,7 @@ class AESBackend:
         return bytes(output)
 
     def add_round_key_step(self, state, round_key):
+        """Paso auxiliar para aplicar AddRoundKey con una clave de ronda específica."""
         for c in range(4):
             for r in range(4):
                 state[c][r] ^= round_key[c][r]

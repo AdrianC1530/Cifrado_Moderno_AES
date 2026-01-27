@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import binascii
 
-# Import backend and middleware
+# Importar backend y middleware
 try:
     from src.backend.aes import AESBackend
     from src.middleware.padding import PKCS7Padding, Validator
@@ -16,20 +16,20 @@ except ImportError:
 class AESApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("AES-128 Explorer | Modern Edition")
+        self.root.title("Explorador AES-128 | Edición Moderna")
         self.root.geometry("1000x750")
         
-        # --- Modern Dark Theme Palette ---
+        # --- Paleta de Tema Oscuro Moderno ---
         self.colors = {
-            "bg_main": "#1E1E1E",       # Dark Grey (VS Code style)
-            "bg_panel": "#252526",      # Slightly lighter grey
-            "fg_text": "#D4D4D4",       # Light grey text
-            "accent": "#007ACC",        # Blue accent
+            "bg_main": "#1E1E1E",       # Gris Oscuro (Estilo VS Code)
+            "bg_panel": "#252526",      # Gris ligeramente más claro
+            "fg_text": "#D4D4D4",       # Texto gris claro
+            "accent": "#007ACC",        # Acento Azul
             "accent_hover": "#005f9e",
             "matrix_bg": "#333333",
-            "matrix_fg": "#9CDCFE",     # Light Blue for hex
-            "success": "#4EC9B0",       # Greenish
-            "warning": "#CE9178"        # Orange/Redish
+            "matrix_fg": "#9CDCFE",     # Azul claro para hex
+            "success": "#4EC9B0",       # Verdoso
+            "warning": "#CE9178"        # Naranja/Rojizo
         }
 
         self.root.configure(bg=self.colors["bg_main"])
@@ -46,19 +46,19 @@ class AESApp:
 
     def setup_styles(self):
         style = ttk.Style()
-        style.theme_use('clam') # 'clam' allows more customizability than 'vista' or 'default'
+        style.theme_use('clam') # 'clam' permite más personalización que 'vista' o 'default'
 
-        # General Frame/Label
+        # Marco/Etiqueta General
         style.configure("TFrame", background=self.colors["bg_main"])
         style.configure("TLabel", background=self.colors["bg_main"], foreground=self.colors["fg_text"], font=("Segoe UI", 10))
         style.configure("Header.TLabel", font=("Segoe UI", 18, "bold"), foreground=self.colors["accent"])
         style.configure("SubHeader.TLabel", font=("Segoe UI", 12, "bold"), foreground=self.colors["fg_text"])
         
-        # Panels
+        # Paneles
         style.configure("Panel.TFrame", background=self.colors["bg_panel"], relief="flat")
         style.configure("Panel.TLabel", background=self.colors["bg_panel"], foreground=self.colors["fg_text"])
 
-        # Buttons (Modern Flat)
+        # Botones (Planos Modernos)
         style.configure("Accent.TButton", 
                         font=("Segoe UI", 10, "bold"), 
                         background=self.colors["accent"], 
@@ -76,7 +76,7 @@ class AESApp:
         style.map("Nav.TButton", 
                   background=[('active', "#505050")])
 
-        # Entry
+        # Entrada de texto
         style.configure("Modern.TEntry", 
                         fieldbackground="#3C3C3C", 
                         foreground="white", 
@@ -85,62 +85,62 @@ class AESApp:
                         padding=5)
 
     def setup_ui(self):
-        # --- Header ---
+        # --- Encabezado ---
         header_frame = ttk.Frame(self.root, padding="20 20 20 10")
         header_frame.pack(fill=tk.X)
-        ttk.Label(header_frame, text="AES-128 EXPLORER", style="Header.TLabel").pack(side=tk.LEFT)
-        ttk.Label(header_frame, text="Didactic Visualization Tool", style="TLabel").pack(side=tk.LEFT, padx=10, pady=(8,0))
+        ttk.Label(header_frame, text="EXPLORADOR AES-128", style="Header.TLabel").pack(side=tk.LEFT)
+        ttk.Label(header_frame, text="Herramienta de Visualización Didáctica", style="TLabel").pack(side=tk.LEFT, padx=10, pady=(8,0))
 
-        # --- Main Layout ---
+        # --- Diseño Principal ---
         main_container = ttk.Frame(self.root, padding="20")
         main_container.pack(fill=tk.BOTH, expand=True)
 
-        # Left Column: Controls (40%)
+        # Columna Izquierda: Controles (40%)
         left_col = ttk.Frame(main_container)
         left_col.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 20))
 
-        # Right Column: Visualization (60%)
+        # Columna Derecha: Visualización (60%)
         right_col = ttk.Frame(main_container)
         right_col.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-        # --- Input Section (Left) ---
-        input_panel = ttk.Frame(left_col) # Transparent container
+        # --- Sección de Entrada (Izquierda) ---
+        input_panel = ttk.Frame(left_col) # Contenedor transparente
         input_panel.pack(fill=tk.X, pady=(0, 20))
 
-        ttk.Label(input_panel, text="INPUT DATA (UTF-8)", style="SubHeader.TLabel").pack(anchor=tk.W, pady=(0, 5))
+        ttk.Label(input_panel, text="DATOS DE ENTRADA (UTF-8)", style="SubHeader.TLabel").pack(anchor=tk.W, pady=(0, 5))
         
         self.input_text = tk.Text(input_panel, height=4, bg="#3C3C3C", fg="white", 
                                   font=("Consolas", 10), relief="flat", insertbackground="white")
         self.input_text.pack(fill=tk.X, pady=(0, 15))
 
-        ttk.Label(input_panel, text="SECRET KEY (16 CHARS)", style="SubHeader.TLabel").pack(anchor=tk.W, pady=(0, 5))
+        ttk.Label(input_panel, text="CLAVE SECRETA (16 CARACTERES)", style="SubHeader.TLabel").pack(anchor=tk.W, pady=(0, 5))
         self.key_entry = ttk.Entry(input_panel, style="Modern.TEntry", font=("Consolas", 10))
         self.key_entry.pack(fill=tk.X, pady=(0, 15), ipady=3)
         self.key_entry.insert(0, "Thats my Kung Fu")
 
-        # Action Buttons
+        # Botones de Acción
         btn_frame = ttk.Frame(input_panel)
         btn_frame.pack(fill=tk.X, pady=(0, 20))
         
-        self.btn_encrypt = ttk.Button(btn_frame, text="🔒 ENCRYPT", style="Accent.TButton", command=self.encrypt)
+        self.btn_encrypt = ttk.Button(btn_frame, text="🔒 CIFRAR", style="Accent.TButton", command=self.encrypt)
         self.btn_encrypt.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         
-        self.btn_decrypt = ttk.Button(btn_frame, text="🔓 DECRYPT", style="Nav.TButton", command=self.decrypt)
+        self.btn_decrypt = ttk.Button(btn_frame, text="🔓 DESCIFRAR", style="Nav.TButton", command=self.decrypt)
         self.btn_decrypt.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
 
-        # Output Section
-        ttk.Label(input_panel, text="OUTPUT (HEX)", style="SubHeader.TLabel").pack(anchor=tk.W, pady=(0, 5))
+        # Sección de Salida
+        ttk.Label(input_panel, text="SALIDA (HEX)", style="SubHeader.TLabel").pack(anchor=tk.W, pady=(0, 5))
         self.output_text = tk.Text(input_panel, height=4, bg="#2D2D2D", fg=self.colors["success"], 
                                    font=("Consolas", 10), relief="flat", state="disabled")
         self.output_text.pack(fill=tk.X)
 
-        # --- Visualization Section (Right) ---
-        vis_panel = ttk.Frame(right_col, style="Panel.TFrame", padding="20") # Darker background
+        # --- Sección de Visualización (Derecha) ---
+        vis_panel = ttk.Frame(right_col, style="Panel.TFrame", padding="20") # Fondo más oscuro
         vis_panel.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Label(vis_panel, text="STATE MATRIX", style="Header.TLabel", background=self.colors["bg_panel"]).pack(pady=(0, 20))
+        ttk.Label(vis_panel, text="MATRIZ DE ESTADO", style="Header.TLabel", background=self.colors["bg_panel"]).pack(pady=(0, 20))
 
-        # The Grid
+        # La Cuadrícula (Grid)
         matrix_frame = ttk.Frame(vis_panel, style="Panel.TFrame")
         matrix_frame.pack(expand=True)
         
@@ -148,7 +148,7 @@ class AESApp:
         for r in range(4):
             row_cells = []
             for c in range(4):
-                # Using a Frame to create a border effect
+                # Usando un Frame para crear efecto de borde
                 cell_border = tk.Frame(matrix_frame, bg="#505050", padx=1, pady=1)
                 cell_border.grid(row=r, column=c, padx=5, pady=5)
                 
@@ -159,19 +159,19 @@ class AESApp:
                 row_cells.append(cell)
             self.matrix_cells.append(row_cells)
 
-        # Controls for Steps
+        # Controles de Pasos
         control_frame = ttk.Frame(vis_panel, style="Panel.TFrame")
         control_frame.pack(fill=tk.X, pady=20)
 
-        self.step_label = ttk.Label(control_frame, text="Ready to Start", 
+        self.step_label = ttk.Label(control_frame, text="Listo para Iniciar", 
                                     font=("Segoe UI", 12), foreground="#888", background=self.colors["bg_panel"])
         self.step_label.pack(pady=(0, 10))
 
         nav_btns = ttk.Frame(control_frame, style="Panel.TFrame")
         nav_btns.pack()
         
-        ttk.Button(nav_btns, text="⏮ PREV", style="Nav.TButton", command=self.prev_step).pack(side=tk.LEFT, padx=5)
-        ttk.Button(nav_btns, text="NEXT ⏭", style="Nav.TButton", command=self.next_step).pack(side=tk.LEFT, padx=5)
+        ttk.Button(nav_btns, text="⏮ ANTERIOR", style="Nav.TButton", command=self.prev_step).pack(side=tk.LEFT, padx=5)
+        ttk.Button(nav_btns, text="SIGUIENTE ⏭", style="Nav.TButton", command=self.next_step).pack(side=tk.LEFT, padx=5)
 
     def update_matrix(self, state):
         for c in range(4):
@@ -185,7 +185,7 @@ class AESApp:
             key_str = self.key_entry.get()
 
             if not plaintext:
-                messagebox.showwarning("Input Error", "Please enter some text.")
+                messagebox.showwarning("Error de Entrada", "Por favor ingrese algún texto.")
                 return
 
             key_bytes = self.validator.validate_key(key_str)
@@ -224,7 +224,7 @@ class AESApp:
             key_str = self.key_entry.get()
 
             if not hex_input:
-                messagebox.showwarning("Input Error", "Please enter Hex ciphertext.")
+                messagebox.showwarning("Error de Entrada", "Por favor ingrese el texto cifrado en Hex.")
                 return
 
             key_bytes = self.validator.validate_key(key_str)
@@ -232,7 +232,7 @@ class AESApp:
             try:
                 ciphertext = binascii.unhexlify(hex_input)
             except binascii.Error:
-                messagebox.showerror("Format Error", "Input must be valid Hex.")
+                messagebox.showerror("Error de Formato", "La entrada debe ser Hexadecimal válido.")
                 return
 
             decrypted_padded = b""
@@ -252,7 +252,7 @@ class AESApp:
             self.output_text.insert("1.0", plaintext)
             self.output_text.config(state="disabled")
             
-            self.step_label.config(text="Decryption Complete", foreground=self.colors["success"])
+            self.step_label.config(text="Descifrado Completo", foreground=self.colors["success"])
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
@@ -264,17 +264,17 @@ class AESApp:
         state = self.current_state_history[self.current_step_index]
         self.update_matrix(state)
         
-        round_name = "Unknown"
+        round_name = "Desconocido"
         if self.current_step_index == 0:
-            round_name = "Initial State (Plaintext)"
+            round_name = "Estado Inicial (Texto Plano)"
         elif self.current_step_index == 1:
-            round_name = "Round 0: AddRoundKey"
+            round_name = "Ronda 0: AddRoundKey"
         elif 2 <= self.current_step_index <= 10:
-            round_name = f"Round {self.current_step_index - 1}: Full Cycle"
+            round_name = f"Ronda {self.current_step_index - 1}: Ciclo Completo"
         elif self.current_step_index == 11:
-            round_name = "Final Round (No MixColumns)"
+            round_name = "Ronda Final (Sin MixColumns)"
             
-        self.step_label.config(text=f"Step {self.current_step_index}/11: {round_name}")
+        self.step_label.config(text=f"Paso {self.current_step_index}/11: {round_name}")
 
     def next_step(self):
         if self.current_step_index < len(self.current_state_history) - 1:

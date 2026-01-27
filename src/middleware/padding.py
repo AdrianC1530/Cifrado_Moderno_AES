@@ -4,7 +4,7 @@ class PKCS7Padding:
 
     def pad(self, data: bytes) -> bytes:
         """
-        Applies PKCS#7 padding to the data.
+        Aplica relleno (padding) PKCS#7 a los datos.
         """
         padding_len = self.block_size - (len(data) % self.block_size)
         padding = bytes([padding_len] * padding_len)
@@ -12,20 +12,20 @@ class PKCS7Padding:
 
     def unpad(self, data: bytes) -> bytes:
         """
-        Removes PKCS#7 padding from the data.
+        Elimina el relleno PKCS#7 de los datos.
         """
         if not data:
-            raise ValueError("Data is empty.")
+            raise ValueError("Los datos están vacíos.")
         
         padding_len = data[-1]
         
         if padding_len == 0 or padding_len > self.block_size:
-             raise ValueError("Invalid padding length.")
+             raise ValueError("Longitud de relleno inválida.")
              
-        # Verify that all padding bytes are correct
+        # Verificar que todos los bytes de relleno sean correctos
         for i in range(1, padding_len + 1):
             if data[-i] != padding_len:
-                raise ValueError("Invalid padding bytes.")
+                raise ValueError("Bytes de relleno inválidos.")
                 
         return data[:-padding_len]
 
@@ -33,32 +33,26 @@ class Validator:
     @staticmethod
     def validate_key(key: str) -> bytes:
         """
-        Validates and converts the key to 16 bytes.
-        Supports Hex string or plain text.
+        Valida y convierte la clave a 16 bytes.
+        Soporta cadena Hex o texto plano.
         """
         if not key:
             raise ValueError("La clave no puede estar vacía.")
             
-        # Try to interpret as hex if it looks like it
-        # (Optional logic, for now let's stick to strict 16 chars or 32 hex chars if user wants)
-        # Requirement says "visualice las claves (Hex/Base64)", but input?
-        # Let's assume input is a string that needs to be 16 bytes.
-        # If it's shorter, we could pad it? Or raise error?
-        # AES-128 requires exactly 128 bits (16 bytes).
-        
         key_bytes = key.encode('utf-8')
         
         if len(key_bytes) == 16:
             return key_bytes
         elif len(key_bytes) > 16:
-            # Truncate (simple approach for demo)
+            # Truncar (enfoque simple para demostración)
             return key_bytes[:16]
         else:
-            # Pad with zeros (simple approach for demo)
+            # Rellenar con ceros (enfoque simple para demostración)
             return key_bytes.ljust(16, b'\0')
 
     @staticmethod
     def ensure_bytes(data) -> bytes:
+        """Asegura que los datos sean bytes."""
         if isinstance(data, str):
             return data.encode('utf-8')
         return data
