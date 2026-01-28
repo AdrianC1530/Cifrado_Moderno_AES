@@ -1,4 +1,5 @@
 import binascii
+import re
 
 class PKCS7Padding:
     def __init__(self, block_size=16):
@@ -38,6 +39,9 @@ class Validator:
         Valida y convierte la clave a 16 bytes.
         Soporta cadena Hex o texto plano.
         """
+        if not isinstance(key, str):
+            raise ValueError("La clave debe ser una cadena de texto.")
+
         if not key:
             raise ValueError("La clave no puede estar vacía.")
             
@@ -61,9 +65,18 @@ class Validator:
 
     @staticmethod
     def validate_plaintext(text: str) -> str:
-        """Valida que el texto plano no esté vacío."""
+        """Valida que el texto plano no esté vacío y no contenga caracteres especiales."""
+        if not isinstance(text, str):
+            raise ValueError("El texto debe ser una cadena de caracteres.")
+            
         if not text or not text.strip():
             raise ValueError("Por favor ingrese algún texto para cifrar.")
+            
+        # Validar que solo contenga caracteres alfanuméricos y espacios
+        # Se pueden agregar más caracteres permitidos según sea necesario
+        if not re.match(r'^[a-zA-Z0-9\s\.,;:\-]*$', text):
+            raise ValueError("El texto contiene caracteres especiales no permitidos.")
+            
         return text
 
     @staticmethod
