@@ -185,10 +185,7 @@ class AESApp:
             plaintext = self.input_text.get("1.0", tk.END).strip()
             key_str = self.key_entry.get()
 
-            if not plaintext:
-                messagebox.showwarning("Error de Entrada", "Por favor ingrese algún texto.")
-                return
-
+            plaintext = self.validator.validate_plaintext(plaintext)
             key_bytes = self.validator.validate_key(key_str)
             data_bytes = plaintext.encode('utf-8')
             padded_data = self.padder.pad(data_bytes)
@@ -225,17 +222,8 @@ class AESApp:
             hex_input = self.input_text.get("1.0", tk.END).strip()
             key_str = self.key_entry.get()
 
-            if not hex_input:
-                messagebox.showwarning("Error de Entrada", "Por favor ingrese el texto cifrado en Hex.")
-                return
-
+            ciphertext = self.validator.validate_ciphertext_hex(hex_input)
             key_bytes = self.validator.validate_key(key_str)
-            
-            try:
-                ciphertext = binascii.unhexlify(hex_input)
-            except binascii.Error:
-                messagebox.showerror("Error de Formato", "La entrada debe ser Hexadecimal válido.")
-                return
 
             decrypted_padded = b""
             first_block_trace = None
@@ -249,11 +237,8 @@ class AESApp:
                     decrypted_block = self.backend.decrypt_block(block, key_bytes, trace=False)
                 decrypted_padded += decrypted_block
 
-            try:
-                plaintext_bytes = self.padder.unpad(decrypted_padded)
-                plaintext = plaintext_bytes.decode('utf-8')
-            except Exception as e:
-                plaintext = f"[Error]: {e}"
+            plaintext_bytes = self.padder.unpad(decrypted_padded)
+            plaintext = self.validator.validate_decrypted_text(plaintext_bytes)
 
             self.output_text.config(state="normal")
             self.output_text.delete("1.0", tk.END)

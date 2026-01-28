@@ -1,3 +1,5 @@
+import binascii
+
 class PKCS7Padding:
     def __init__(self, block_size=16):
         self.block_size = block_size
@@ -56,3 +58,29 @@ class Validator:
         if isinstance(data, str):
             return data.encode('utf-8')
         return data
+
+    @staticmethod
+    def validate_plaintext(text: str) -> str:
+        """Valida que el texto plano no esté vacío."""
+        if not text or not text.strip():
+            raise ValueError("Por favor ingrese algún texto para cifrar.")
+        return text
+
+    @staticmethod
+    def validate_ciphertext_hex(hex_str: str) -> bytes:
+        """Valida que el texto cifrado no esté vacío y sea hexadecimal válido."""
+        if not hex_str or not hex_str.strip():
+            raise ValueError("Por favor ingrese el texto cifrado en Hex.")
+        
+        try:
+            return binascii.unhexlify(hex_str.strip())
+        except binascii.Error:
+            raise ValueError("La entrada debe ser Hexadecimal válido.")
+
+    @staticmethod
+    def validate_decrypted_text(data: bytes) -> str:
+        """Intenta decodificar los bytes a UTF-8, manejando errores."""
+        try:
+            return data.decode('utf-8')
+        except UnicodeDecodeError:
+            raise ValueError("Error al descifrar: La clave puede ser incorrecta o los datos no son texto válido.")
