@@ -1,0 +1,2 @@
+# No external dependencies are required for this project.
+# Standard libraries used: tkinter, binascii, re, sys, os
